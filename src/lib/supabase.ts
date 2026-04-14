@@ -115,6 +115,32 @@ export type Database = {
           created_at?: string
         }
       }
+      user_roadmap_progress: {
+        Row: {
+          id: string
+          user_id: string
+          step_id: string
+          status: 'pending' | 'in-progress' | 'completed'
+          completed_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          step_id: string
+          status?: 'pending' | 'in-progress' | 'completed'
+          completed_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          step_id?: string
+          status?: 'pending' | 'in-progress' | 'completed'
+          completed_at?: string | null
+          created_at?: string
+        }
+      }
       questions: {
         Row: {
           id: number
@@ -148,6 +174,7 @@ export type Database = {
           quiz_id: number
           score: number
           total_questions: number
+          answers: string[]
           completed_at: string
         }
         Insert: {
@@ -156,6 +183,7 @@ export type Database = {
           quiz_id: number
           score: number
           total_questions: number
+          answers?: string[]
           completed_at?: string
         }
         Update: {
@@ -164,6 +192,7 @@ export type Database = {
           quiz_id?: number
           score?: number
           total_questions?: number
+          answers?: string[]
           completed_at?: string
         }
       }

@@ -2,7 +2,11 @@ import React, { useState } from 'react'
 import { Brain, Mail, Lock, User } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 
-const AuthForm: React.FC = () => {
+interface AuthFormProps {
+  onBack?: () => void;
+}
+
+const AuthForm: React.FC<AuthFormProps> = ({ onBack }) => {
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -51,7 +55,7 @@ const AuthForm: React.FC = () => {
               {isSignUp ? 'Create Account' : 'Welcome Back'}
             </h2>
             <p className="text-slate-400">
-              {isSignUp 
+              {isSignUp
                 ? 'Join thousands advancing their careers with AI guidance'
                 : 'Sign in to continue your career journey'
               }
@@ -123,14 +127,14 @@ const AuthForm: React.FC = () => {
               disabled={loading}
               className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              {loading 
+              {loading
                 ? (isSignUp ? 'Creating Account...' : 'Signing In...')
                 : (isSignUp ? 'Create Account' : 'Sign In')
               }
             </button>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="mt-6 text-center space-y-4">
             <p className="text-slate-400">
               {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
               <button
@@ -140,6 +144,14 @@ const AuthForm: React.FC = () => {
                 {isSignUp ? 'Sign In' : 'Sign Up'}
               </button>
             </p>
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="text-slate-500 hover:text-slate-300 text-sm font-medium transition-colors"
+              >
+                ← Back to Home
+              </button>
+            )}
           </div>
         </div>
       </div>

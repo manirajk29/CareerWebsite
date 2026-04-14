@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { ArrowLeft, ArrowRight, Clock, CheckCircle, XCircle } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Clock, XCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 
@@ -130,17 +130,25 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, onBack, onComplet
           user_id: user.id,
           quiz_id: quizId,
           score,
-          total_questions: questions.length
+          total_questions: questions.length,
+          answers: userAnswers
         })
 
       if (responseError) throw responseError
 
       // Update user XP
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('xp_points')
+        .eq('id', user.id)
+        .single()
+
+      const currentXp = profile?.xp_points || 0
       const xpGained = score * 10 // 10 XP per correct answer
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ 
-          xp_points: supabase.sql`xp_points + ${xpGained}`,
+        .update({
+          xp_points: currentXp + xpGained,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id)
@@ -245,7 +253,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, onBack, onComplet
           <span>{Math.round(progress)}%</span>
         </div>
         <div className="w-full bg-slate-700/50 rounded-full h-2">
-          <div 
+          <div
             className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
@@ -263,18 +271,16 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, onBack, onComplet
             <button
               key={key}
               onClick={() => handleAnswerSelect(key)}
-              className={`w-full text-left p-4 rounded-lg border transition-all duration-200 ${
-                selectedAnswer === key
-                  ? 'border-indigo-500 bg-indigo-500/10 text-indigo-300'
-                  : 'border-slate-600 bg-slate-700/30 text-slate-300 hover:border-slate-500 hover:bg-slate-700/50'
-              }`}
+              className={`w-full text-left p-4 rounded-lg border transition-all duration-200 ${selectedAnswer === key
+                ? 'border-indigo-500 bg-indigo-500/10 text-indigo-300'
+                : 'border-slate-600 bg-slate-700/30 text-slate-300 hover:border-slate-500 hover:bg-slate-700/50'
+                }`}
             >
               <div className="flex items-center space-x-3">
-                <div className={`w-4 h-4 rounded-full border-2 ${
-                  selectedAnswer === key
-                    ? 'border-indigo-500 bg-indigo-500'
-                    : 'border-slate-500'
-                }`}>
+                <div className={`w-4 h-4 rounded-full border-2 ${selectedAnswer === key
+                  ? 'border-indigo-500 bg-indigo-500'
+                  : 'border-slate-500'
+                  }`}>
                   {selectedAnswer === key && (
                     <div className="w-full h-full rounded-full bg-white scale-50"></div>
                   )}
@@ -304,10 +310,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, onBack, onComplet
           className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span>
-            {submitting 
-              ? 'Submitting...' 
-              : currentQuestionIndex === questions.length - 1 
-                ? 'Submit Quiz' 
+            {submitting
+              ? 'Submitting...'
+              : currentQuestionIndex === questions.length - 1
+                ? 'Submit Quiz'
                 : 'Next'
             }
           </span>
