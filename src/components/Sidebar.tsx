@@ -1,5 +1,5 @@
 import React from 'react'
-import { Home, Map as MapIcon, Brain, Users, LogOut, Zap } from 'lucide-react'
+import { Home, Map as MapIcon, Brain, Users, LogOut, Zap, Target, Settings as SettingsIcon, Rocket } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 
 interface SidebarProps {
@@ -17,9 +17,12 @@ const Sidebar: React.FC<SidebarProps> = ({ activeRoute, onRouteChange }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'roadmaps', label: 'Career Roadmaps', icon: MapIcon },
+    { id: 'learning-tracker', label: 'Learning Tracker', icon: Rocket },
+    { id: 'domain-mastery', label: 'Skill Mastery', icon: Target },
     { id: 'skill-tracker', label: 'Skill Progress', icon: Zap },
     { id: 'assessments', label: 'Skill Assessments', icon: Brain },
     { id: 'community', label: 'Community', icon: Users },
+    { id: 'settings', label: 'Settings', icon: SettingsIcon },
   ]
 
   return (

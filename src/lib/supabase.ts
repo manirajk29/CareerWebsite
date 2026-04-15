@@ -219,6 +219,35 @@ export type Database = {
           created_at?: string
         }
       }
+      user_skill_progress: {
+        Row: {
+          id: string
+          user_id: string
+          domain_id: string
+          completed_tasks: string[]
+          question_results: Record<string, boolean>
+          updated_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          domain_id: string
+          completed_tasks?: string[]
+          question_results?: Record<string, boolean>
+          updated_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          domain_id?: string
+          completed_tasks?: string[]
+          question_results?: Record<string, boolean>
+          updated_at?: string
+          created_at?: string
+        }
+      }
     }
   }
 }

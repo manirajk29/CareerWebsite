@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Database } from '../lib/supabase';
-import { Layout, Server, Layers, Cloud, Brain as BrainIcon, ChevronRight, Map, Sparkles } from 'lucide-react';
+import { Layout, Server, Layers, Cloud, Brain as BrainIcon, ChevronRight, Map, Sparkles, RefreshCw, CheckSquare, LayoutDashboard, Award, BookOpen, TrendingUp, Monitor, ArrowRight } from 'lucide-react';
 import RoadmapDetail from './RoadmapDetail';
 
 type Roadmap = Database['public']['Tables']['roadmaps']['Row'];
@@ -153,6 +153,105 @@ const Roadmaps: React.FC = () => {
                     })}
                 </div>
             )}
+
+            {/* Continuous Growth Section */}
+            <div className="mt-24 pt-16 border-t border-slate-800/50">
+                <div className="text-center mb-16">
+                    <span className="text-emerald-400 font-semibold tracking-wider uppercase text-sm mb-4 block">Student Growth Process</span>
+                    <h2 className="text-3xl md:text-5xl font-bold mb-6 text-white">
+                        Grow <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Continuously</span>
+                    </h2>
+                    <p className="text-lg text-slate-400 max-w-2xl mx-auto">
+                        A structured flow designed to help students grow and master their chosen domain step-by-step with automated tracking.
+                    </p>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Flow */}
+                    <div className="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 p-8 rounded-3xl hover:border-emerald-500/30 transition-all group">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400">
+                                <RefreshCw className="w-6 h-6 group-hover:animate-spin-slow" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-white">Learning Flow</h3>
+                        </div>
+                        <ul className="space-y-5 text-slate-300">
+                            <li className="flex items-start gap-4">
+                                <div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center shrink-0 text-sm font-semibold text-emerald-400">1</div>
+                                <span className="pt-1">User studies roadmap topics</span>
+                            </li>
+                            <li className="flex items-start gap-4">
+                                <div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center shrink-0 text-sm font-semibold text-emerald-400">2</div>
+                                <div className="pt-1">
+                                    <span className="block mb-3 text-slate-200">Platform provides:</span>
+                                    <div className="flex flex-col gap-2.5 text-sm text-slate-400 bg-slate-900/50 p-4 rounded-xl border border-slate-800/50">
+                                        <span className="flex items-center gap-2"><CheckSquare className="w-4 h-4 text-emerald-500" /> Domain-related questions</span>
+                                        <span className="flex items-center gap-2"><CheckSquare className="w-4 h-4 text-emerald-500" /> Practice tasks</span>
+                                        <span className="flex items-center gap-2"><CheckSquare className="w-4 h-4 text-emerald-500" /> Learning checkpoints</span>
+                                    </div>
+                                </div>
+                            </li>
+                            <li className="flex items-start gap-4">
+                                <div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center shrink-0 text-sm font-semibold text-emerald-400">3</div>
+                                <span className="pt-1">User completes learning steps</span>
+                            </li>
+                            <li className="flex items-start gap-4">
+                                <div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center shrink-0 text-sm font-semibold text-emerald-400">4</div>
+                                <span className="pt-1">Progress updates automatically</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    {/* Dashboard Features */}
+                    <div className="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 p-8 rounded-3xl hover:border-blue-500/30 transition-all group">
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className="p-3 bg-blue-500/10 rounded-xl text-blue-400">
+                                <LayoutDashboard className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-white">Dashboard Shows</h3>
+                        </div>
+                        <div className="space-y-4">
+                            {[
+                                { title: 'Completed skills', icon: Award, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
+                                { title: 'Remaining topics', icon: BookOpen, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+                                { title: 'Learning percentage', icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+                                { title: 'Next recommended step', icon: ArrowRight, color: 'text-purple-400', bg: 'bg-purple-400/10' }
+                            ].map((item, i) => (
+                                <div key={i} className="flex items-center gap-4 bg-slate-900/50 p-4 rounded-2xl border border-slate-800 hover:border-slate-700 transition-colors">
+                                    <div className={`p-2 rounded-lg ${item.bg}`}>
+                                        <item.icon className={`w-5 h-5 ${item.color}`} />
+                                    </div>
+                                    <span className="font-medium text-slate-200">{item.title}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* UI Screens */}
+                    <div className="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 p-8 rounded-3xl hover:border-purple-500/30 transition-all group">
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className="p-3 bg-purple-500/10 rounded-xl text-purple-400">
+                                <Monitor className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-white">Included Screens</h3>
+                        </div>
+                        <div className="space-y-4">
+                            {['Learning Dashboard', 'Skill Progress Page', 'Completed Milestones'].map((screen, i) => (
+                                <div key={i} className="group/item relative overflow-hidden bg-gradient-to-r from-slate-900 to-slate-800 p-6 rounded-2xl border border-slate-700/50 hover:border-purple-500/50 transition-all cursor-default shadow-lg shadow-purple-500/5">
+                                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity" />
+                                    <div className="relative z-10 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-2 h-2 rounded-full bg-purple-500" />
+                                            <span className="font-semibold text-slate-200">{screen}</span>
+                                        </div>
+                                        <ArrowRight className="w-4 h-4 text-slate-600 group-hover/item:text-purple-400 group-hover/item:translate-x-1 transition-all" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

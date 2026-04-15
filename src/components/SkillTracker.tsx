@@ -1,7 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../hooks/useAuth';
 import {
     Layout, Server, Layers, Cloud, Brain,
-    ChevronRight, ArrowLeft, CheckCircle2, Circle, Lock,
+    ChevronRight, ArrowLeft, CheckCircle2, Lock,
     Zap, Target, Trophy, TrendingUp, BookOpen, Wrench,
     MessageSquare, ClipboardList, Flag, Star, Rocket,
     ChevronDown, ChevronUp, PlayCircle, Award, BarChart2
@@ -315,11 +317,35 @@ const DomainSelector: React.FC<{ onSelect: (d: Domain) => void }> = ({ onSelect 
 // ─── Skill Dashboard ──────────────────────────────────────────────────────────
 
 const SkillDashboard: React.FC<{ domain: Domain; onBack: () => void }> = ({ domain, onBack }) => {
+    const { user } = useAuth();
     const [progress, setProgress] = useState<Progress>({ completedTasks: new Set(), questionResults: {} });
     const [activeTab, setActiveTab] = useState<'dashboard' | 'questions' | 'tasks' | 'milestones'>('dashboard');
     const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
     const [selectedAnswer, setSelectedAnswer] = useState<Record<string, number>>({});
     const [submittedQuestions, setSubmittedQuestions] = useState<Set<string>>(new Set());
+    const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        if (!user) return;
+        const fetchProgress = async () => {
+            const { data } = await supabase
+                .from('user_skill_progress')
+                .select('*')
+                .eq('user_id', user.id)
+                .eq('domain_id', domain.id)
+                .maybeSingle();
+
+            if (data) {
+                setProgress({
+                    completedTasks: new Set(data.completed_tasks || []),
+                    questionResults: data.question_results || {}
+                });
+                const answered = Object.keys(data.question_results || {});
+                setSubmittedQuestions(new Set(answered));
+            }
+        };
+        fetchProgress();
+    }, [domain.id, user]);
 
     const Icon = domain.icon;
 
@@ -351,28 +377,63 @@ const SkillDashboard: React.FC<{ domain: Domain; onBack: () => void }> = ({ doma
     );
 
     // ── Handlers ───────────────────────────────────────────────────────────
-    const toggleTask = (taskId: string) => {
+    const toggleTask = async (taskId: string) => {
+        if (!user || saving) return;
+        setSaving(true);
+        let newCompletedTasks: string[] = [];
+        let newQuestionResults = progress.questionResults;
+        
         setProgress(prev => {
             const next = new Set(prev.completedTasks);
             next.has(taskId) ? next.delete(taskId) : next.add(taskId);
+            newCompletedTasks = Array.from(next);
+            newQuestionResults = prev.questionResults; // capture current state
             return { ...prev, completedTasks: next };
         });
+
+        await supabase.from('user_skill_progress').upsert({
+            user_id: user.id,
+            domain_id: domain.id,
+            completed_tasks: newCompletedTasks,
+            question_results: newQuestionResults
+        }, { onConflict: 'user_id, domain_id' });
+        
+        setSaving(false);
     };
 
-    const submitQuestion = (qId: string, qAnswer: number) => {
+    const submitQuestion = async (qId: string, qAnswer: number) => {
+        if (!user || saving) return;
         const q = domain.questions.find(q => q.id === qId);
         if (!q) return;
+        setSaving(true);
+        
         const correct = qAnswer === q.answer;
-        setProgress(prev => ({ ...prev, questionResults: { ...prev.questionResults, [qId]: correct } }));
+        let newQuestionResults = { ...progress.questionResults, [qId]: correct };
+        let currentCompletedTasks = Array.from(progress.completedTasks);
+
+        setProgress(prev => {
+            currentCompletedTasks = Array.from(prev.completedTasks);
+            return { ...prev, questionResults: newQuestionResults };
+        });
         setSubmittedQuestions(prev => new Set(prev).add(qId));
+        
+        await supabase.from('user_skill_progress').upsert({
+            user_id: user.id,
+            domain_id: domain.id,
+            completed_tasks: currentCompletedTasks,
+            question_results: newQuestionResults
+        }, { onConflict: 'user_id, domain_id' });
+
+        setSaving(false);
     };
 
-    const tabs = [
+    type TabId = 'dashboard' | 'questions' | 'tasks' | 'milestones';
+    const tabs: { id: TabId; label: string; icon: React.ElementType }[] = [
         { id: 'dashboard', label: 'Dashboard', icon: BarChart2 },
         { id: 'questions', label: `Questions (${domain.questions.length})`, icon: MessageSquare },
         { id: 'tasks', label: `Tasks (${domain.tasks.length})`, icon: ClipboardList },
         { id: 'milestones', label: 'Milestones', icon: Flag },
-    ] as const;
+    ];
 
     return (
         <div className="max-w-5xl mx-auto px-4 py-8">
@@ -608,11 +669,11 @@ const SkillDashboard: React.FC<{ domain: Domain; onBack: () => void }> = ({ doma
                                         {/* Submit / Explanation */}
                                         {!submitted ? (
                                             <button
-                                                disabled={chosen === undefined}
+                                                disabled={chosen === undefined || saving}
                                                 onClick={() => submitQuestion(q.id, chosen)}
                                                 className={`mt-3 w-full py-2.5 rounded-xl text-sm font-semibold transition-all bg-gradient-to-r ${domain.gradient} text-white hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed`}
                                             >
-                                                Submit Answer
+                                                {saving ? 'Saving...' : 'Submit Answer'}
                                             </button>
                                         ) : (
                                             <div className={`mt-3 p-4 rounded-xl border text-sm leading-relaxed ${correct ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-200' : 'border-amber-500/20 bg-amber-500/5 text-amber-200'}`}>
@@ -664,7 +725,8 @@ const SkillDashboard: React.FC<{ domain: Domain; onBack: () => void }> = ({ doma
 
                                     <button
                                         onClick={() => toggleTask(task.id)}
-                                        className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${done
+                                        disabled={saving}
+                                        className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all disabled:opacity-50 ${done
                                             ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/30'
                                             : `bg-gradient-to-r ${domain.gradient} text-white hover:opacity-90 shadow-md`
                                             }`}
@@ -689,9 +751,8 @@ const SkillDashboard: React.FC<{ domain: Domain; onBack: () => void }> = ({ doma
                         Complete tasks to unlock milestones. {unlockedCheckpoints.length}/{domain.checkpoints.length} milestones unlocked.
                     </p>
 
-                    {domain.checkpoints.map((cp, idx) => {
+                    {domain.checkpoints.map((cp) => {
                         const unlocked = progress.completedTasks.size >= cp.unlocksAt;
-                        const CpIcon = [BookOpen, Wrench, Rocket, Briefcase][idx] || Trophy;
                         return (
                             <div key={cp.id} className={`rounded-2xl border overflow-hidden transition-all duration-300 ${unlocked ? 'border-amber-500/30 bg-amber-500/5' : 'border-slate-700/50 bg-slate-800/30 opacity-70'}`}>
                                 <div className="flex items-start gap-4 p-6">

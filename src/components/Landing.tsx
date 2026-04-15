@@ -1,5 +1,5 @@
 import React from 'react';
-import { Brain, Target, Rocket, Sparkles, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Brain, Target, Rocket, Sparkles, ArrowRight, CheckCircle2, RefreshCw, CheckSquare, LayoutDashboard, Award, BookOpen, TrendingUp, Monitor } from 'lucide-react';
 
 interface LandingProps {
     onGetStarted: () => void;
@@ -82,7 +82,7 @@ const Landing: React.FC<LandingProps> = ({ onGetStarted }) => {
             </section>
 
             {/* Features Grid */}
-            <section className="relative z-10 max-w-7xl mx-auto px-6 py-32 border-t border-slate-800/50">
+            <section className="relative z-10 max-w-7xl mx-auto px-6 py-20 border-t border-slate-800/50">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {features.map((feature, idx) => (
                         <div
@@ -132,3 +132,4 @@ const Landing: React.FC<LandingProps> = ({ onGetStarted }) => {
 };
 
 export default Landing;
+

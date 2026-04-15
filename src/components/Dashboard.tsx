@@ -18,6 +18,13 @@ interface RecentResult {
   completed_at: string
 }
 
+interface RoadmapProgress {
+  id: string
+  title: string
+  color: string
+  progress: number
+}
+
 const Dashboard: React.FC = () => {
   const { user } = useAuth()
   const [userStats, setUserStats] = useState<UserStats>({
@@ -27,6 +34,7 @@ const Dashboard: React.FC = () => {
     skill_level: 'Beginner'
   })
   const [recentResults, setRecentResults] = useState<RecentResult[]>([])
+  const [roadmapProgressList, setRoadmapProgressList] = useState<RoadmapProgress[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -75,6 +83,51 @@ const Dashboard: React.FC = () => {
         })) || []
 
         setRecentResults(formattedResults)
+        // Fetch dynamic roadmap progress
+        const [
+          { data: roadmaps },
+          { data: allSteps },
+          { data: userProgress }
+        ] = await Promise.all([
+          supabase.from('roadmaps').select('id, title, color_gradient'),
+          supabase.from('roadmap_steps').select('id, roadmap_id'),
+          supabase.from('user_roadmap_progress').select('step_id').eq('user_id', user.id).eq('status', 'completed')
+        ])
+
+        const roadmapStatsMap = new Map<string, { title: string; color: string; total: number; completed: number }>()
+        
+        if (roadmaps && allSteps) {
+          // Initialize map with roadmaps
+          roadmaps.forEach(rm => {
+            roadmapStatsMap.set(rm.id, { title: rm.title, color: rm.color_gradient || 'from-indigo-500 to-purple-500', total: 0, completed: 0 })
+          })
+
+          // Setup completed set for fast lookup
+          const completedStepIds = new Set(userProgress?.map(p => p.step_id) || [])
+
+          allSteps.forEach(step => {
+            const stat = roadmapStatsMap.get(step.roadmap_id)
+            if (stat) {
+              stat.total += 1
+              if (completedStepIds.has(step.id)) {
+                stat.completed += 1
+              }
+            }
+          })
+        }
+
+        const formattedProgressList = Array.from(roadmapStatsMap.entries())
+          .map(([id, stat]) => ({
+            id,
+            title: stat.title,
+            color: stat.color,
+            progress: stat.total > 0 ? Math.round((stat.completed / stat.total) * 100) : 0
+          }))
+          .filter(rm => rm.progress > 0) // Only show roadmaps they have started
+          .sort((a, b) => b.progress - a.progress)
+          .slice(0, 3)
+
+        setRoadmapProgressList(formattedProgressList)
       } catch (error) {
         console.error('Error fetching dashboard data:', error)
       } finally {
@@ -215,35 +268,27 @@ const Dashboard: React.FC = () => {
           {/* Learning Progress */}
           <div className="bg-slate-800/40 backdrop-blur-md rounded-xl border border-slate-700/50 p-6">
             <h3 className="text-lg font-semibold text-white mb-4">Learning Progress</h3>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-slate-300">JavaScript</span>
-                  <span className="text-indigo-400">85%</span>
-                </div>
-                <div className="w-full bg-slate-700/50 rounded-full h-2">
-                  <div className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full" style={{ width: '85%' }} />
-                </div>
+            {roadmapProgressList.length > 0 ? (
+              <div className="space-y-4">
+                {roadmapProgressList.map(rm => (
+                  <div key={rm.id}>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-slate-300">{rm.title}</span>
+                      <span className="text-indigo-400">{rm.progress}%</span>
+                    </div>
+                    <div className="w-full bg-slate-700/50 rounded-full h-2">
+                      <div className={`bg-gradient-to-r ${rm.color} h-2 rounded-full`} style={{ width: `${rm.progress}%` }} />
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-slate-300">React</span>
-                  <span className="text-indigo-400">70%</span>
-                </div>
-                <div className="w-full bg-slate-700/50 rounded-full h-2">
-                  <div className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full" style={{ width: '70%' }} />
-                </div>
+            ) : (
+              <div className="text-center py-6">
+                <Target className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+                <p className="text-slate-400 text-sm">No progress yet.</p>
+                <p className="text-slate-500 text-xs mt-1">Start a roadmap to track your learning!</p>
               </div>
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-slate-300">Node.js</span>
-                  <span className="text-indigo-400">45%</span>
-                </div>
-                <div className="w-full bg-slate-700/50 rounded-full h-2">
-                  <div className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full" style={{ width: '45%' }} />
-                </div>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Community Stats */}

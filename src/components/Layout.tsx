@@ -8,6 +8,9 @@ import CommunityFeed from './CommunityFeed'
 import Roadmaps from './Roadmaps'
 import Onboarding from './Onboarding'
 import SkillTracker from './SkillTracker'
+import ContinuousLearningTracker from './ContinuousLearning/ContinuousLearningTracker'
+import DomainMastery from './DomainMastery'
+import Settings from './Settings'
 
 const Layout: React.FC = () => {
   const { user } = useAuth()
@@ -47,6 +50,12 @@ const Layout: React.FC = () => {
         return <QuizGallery />
       case 'roadmaps':
         return <Roadmaps />
+      case 'learning-tracker':
+        return <ContinuousLearningTracker />
+      case 'domain-mastery':
+        return <DomainMastery />
+      case 'settings':
+        return <Settings />
       case 'skill-tracker':
         return <SkillTracker />
       case 'community':
